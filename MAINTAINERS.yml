@@ -854,6 +854,7 @@ Documentation:
         - include/drivers/uart.h
         - include/drivers/uart/
         - dts/bindings/serial/
+        - samples/drivers/uart/
         - tests/drivers/uart/
     labels:
         - "area: UART"
@@ -1397,6 +1398,7 @@ GD32 Platforms:
         - soburi
     files:
         - boards/arm/gd32*/
+        - boards/riscv/gd32*/
         - boards/riscv/longan_nano/
         - drivers/*/*gd32*/
         - drivers/*/*gd32*
@@ -1788,7 +1790,6 @@ CI:
         - galak
     files:
         - .github/
-        - .buildkite/
         - scripts/ci/
         - .checkpatch.conf
         - scripts/gitlint/

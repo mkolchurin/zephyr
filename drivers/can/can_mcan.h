@@ -8,15 +8,25 @@
 #ifndef ZEPHYR_DRIVERS_CAN_MCAN_H_
 #define ZEPHYR_DRIVERS_CAN_MCAN_H_
 
-#define NUM_STD_FILTER_ELEMENTS DT_PROP(DT_PATH(soc, can), std_filter_elements)
-#define NUM_EXT_FILTER_ELEMENTS DT_PROP(DT_PATH(soc, can), ext_filter_elements)
-#define NUM_RX_FIFO0_ELEMENTS   DT_PROP(DT_PATH(soc, can), rx_fifo0_elements)
-#define NUM_RX_FIFO1_ELEMENTS   DT_PROP(DT_PATH(soc, can), rx_fifo0_elements)
-#define NUM_RX_BUF_ELEMENTS     DT_PROP(DT_PATH(soc, can), rx_buffer_elements)
-#define NUM_TX_EVENT_FIFO_ELEMENTS \
-			DT_PROP(DT_PATH(soc, can), tx_event_fifo_elements)
-#define NUM_TX_BUF_ELEMENTS     DT_PROP(DT_PATH(soc, can), tx_buffer_elements)
+#include <kernel.h>
+#include <devicetree.h>
+#include <drivers/can.h>
 
+#include <toolchain.h>
+#include <stdint.h>
+
+#ifdef CONFIG_CAN_MCUX_MCAN
+#define MCAN_DT_PATH DT_NODELABEL(can0)
+#else
+#define MCAN_DT_PATH DT_PATH(soc, can)
+#endif
+
+#define NUM_STD_FILTER_ELEMENTS DT_PROP(MCAN_DT_PATH, std_filter_elements)
+#define NUM_EXT_FILTER_ELEMENTS DT_PROP(MCAN_DT_PATH, ext_filter_elements)
+#define NUM_RX_FIFO0_ELEMENTS   DT_PROP(MCAN_DT_PATH, rx_fifo0_elements)
+#define NUM_RX_FIFO1_ELEMENTS   DT_PROP(MCAN_DT_PATH, rx_fifo0_elements)
+#define NUM_RX_BUF_ELEMENTS     DT_PROP(MCAN_DT_PATH, rx_buffer_elements)
+#define NUM_TX_BUF_ELEMENTS     DT_PROP(MCAN_DT_PATH, tx_buffer_elements)
 
 #ifdef CONFIG_CAN_STM32FD
 #define NUM_STD_FILTER_DATA CONFIG_CAN_MAX_STD_ID_FILTER
@@ -167,6 +177,7 @@ struct can_mcan_data {
 	void *cb_arg_std[NUM_STD_FILTER_DATA];
 	void *cb_arg_ext[NUM_EXT_FILTER_DATA];
 	can_state_change_callback_t state_change_cb;
+	void *state_change_cb_data;
 	uint32_t std_filt_rtr;
 	uint32_t std_filt_rtr_mask;
 	uint8_t ext_filt_rtr;

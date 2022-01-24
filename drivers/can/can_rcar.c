@@ -11,6 +11,7 @@
 #include <drivers/can.h>
 #include <drivers/clock_control.h>
 #include <drivers/clock_control/rcar_clock_control.h>
+#include <drivers/pinctrl.h>
 
 #include <logging/log.h>
 LOG_MODULE_DECLARE(can_driver, CONFIG_CAN_LOG_LEVEL);
@@ -179,6 +180,7 @@ struct can_rcar_cfg {
 	uint8_t phase_seg1;
 	uint8_t phase_seg2;
 	uint16_t sample_point;
+	const struct pinctrl_dev_config *pcfg;
 };
 
 struct can_rcar_tx_cb {
@@ -199,6 +201,7 @@ struct can_rcar_data {
 	void *rx_callback_arg[CONFIG_CAN_RCAR_MAX_FILTER];
 	struct zcan_filter filter[CONFIG_CAN_RCAR_MAX_FILTER];
 	can_state_change_callback_t state_change_cb;
+	void *state_change_cb_data;
 	enum can_state state;
 };
 
@@ -251,6 +254,7 @@ static void can_rcar_state_change(const struct device *dev, uint32_t newstate)
 	const struct can_rcar_cfg *config = DEV_CAN_CFG(dev);
 	struct can_rcar_data *data = DEV_CAN_DATA(dev);
 	const can_state_change_callback_t cb = data->state_change_cb;
+	void *state_change_cb_data = data->state_change_cb_data;
 	struct can_bus_err_cnt err_cnt;
 
 	if (data->state == newstate) {
@@ -265,7 +269,7 @@ static void can_rcar_state_change(const struct device *dev, uint32_t newstate)
 		return;
 	}
 	can_rcar_get_error_count(config, &err_cnt);
-	cb(newstate, err_cnt);
+	cb(newstate, err_cnt, state_change_cb_data);
 }
 
 static void can_rcar_error(const struct device *dev)
@@ -323,6 +327,7 @@ static void can_rcar_error(const struct device *dev)
 		/* Clear interrupt condition */
 		sys_write8((uint8_t)~RCAR_CAN_EIFR_EWIF,
 			   config->reg_addr + RCAR_CAN_EIFR);
+		can_rcar_state_change(dev, CAN_ERROR_WARNING);
 	}
 	if (eifr & RCAR_CAN_EIFR_EPIF) {
 		LOG_DBG("Error passive interrupt\n");
@@ -657,11 +662,13 @@ unlock:
 }
 
 static void can_rcar_set_state_change_callback(const struct device *dev,
-					       can_state_change_callback_t cb)
+					       can_state_change_callback_t cb,
+					       void *user_data)
 {
 	struct can_rcar_data *data = DEV_CAN_DATA(dev);
 
 	data->state_change_cb = cb;
+	data->state_change_cb_data = user_data;
 }
 
 static enum can_state can_rcar_get_state(const struct device *dev,
@@ -862,6 +869,13 @@ static int can_rcar_init(const struct device *dev)
 	memset(data->rx_callback, 0, sizeof(data->rx_callback));
 	data->state = CAN_ERROR_ACTIVE;
 	data->state_change_cb = NULL;
+	data->state_change_cb_data = NULL;
+
+	/* Configure dt provided device signals when available */
+	ret = pinctrl_apply_state(config->pcfg, PINCTRL_STATE_DEFAULT);
+	if (ret < 0) {
+		return ret;
+	}
 
 	/* reset the registers */
 	ret = clock_control_off(config->clock_dev,
@@ -1019,6 +1033,7 @@ static const struct can_driver_api can_rcar_driver_api = {
 
 /* Device Instantiation */
 #define CAN_RCAR_INIT(n)							\
+	PINCTRL_DT_INST_DEFINE(n);						\
 	static void can_rcar_##n##_init(const struct device *dev);		\
 	static const struct can_rcar_cfg can_rcar_cfg_##n = {			\
 		.reg_addr = DT_INST_REG_ADDR(n),				\
@@ -1040,6 +1055,7 @@ static const struct can_driver_api can_rcar_driver_api = {
 		.phase_seg1 = DT_INST_PROP_OR(n, phase_seg1, 0),		\
 		.phase_seg2 = DT_INST_PROP_OR(n, phase_seg2, 0),		\
 		.sample_point = DT_INST_PROP_OR(n, sample_point, 0),		\
+		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),			\
 	};									\
 	static struct can_rcar_data can_rcar_data_##n;				\
 										\

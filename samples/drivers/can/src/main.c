@@ -110,6 +110,8 @@ char *state_to_str(enum can_state state)
 	switch (state) {
 	case CAN_ERROR_ACTIVE:
 		return "error-active";
+	case CAN_ERROR_WARNING:
+		return "error-warning";
 	case CAN_ERROR_PASSIVE:
 		return "error-passive";
 	case CAN_BUS_OFF:
@@ -165,11 +167,13 @@ void state_change_work_handler(struct k_work *work)
 #endif /* CONFIG_CAN_AUTO_BUS_OFF_RECOVERY */
 }
 
-void state_change_callback(enum can_state state, struct can_bus_err_cnt err_cnt)
+void state_change_callback(enum can_state state, struct can_bus_err_cnt err_cnt, void *user_data)
 {
+	struct k_work *work = (struct k_work *)user_data;
+
 	current_state = state;
 	current_err_cnt = err_cnt;
-	k_work_submit(&state_change_work);
+	k_work_submit(work);
 }
 
 void main(void)
@@ -257,7 +261,7 @@ void main(void)
 		printk("ERROR spawning poll_state_thread\n");
 	}
 
-	can_set_state_change_callback(can_dev, state_change_callback);
+	can_set_state_change_callback(can_dev, state_change_callback, &state_change_work);
 
 	printk("Finished init.\n");
 
