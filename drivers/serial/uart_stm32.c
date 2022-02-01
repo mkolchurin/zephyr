@@ -657,7 +657,8 @@ static int uart_stm32_fifo_fill(const struct device *dev,
 		
 	}
 	while(!LL_USART_IsActiveFlag_TC(UartInstance)){}
-	uart_irq_tx_disable(dev);
+	
+	// uart_irq_tx_disable(dev);
 	irq_unlock(key);
 
 	return num_tx;
@@ -748,6 +749,7 @@ static void uart_stm32_irq_rx_enable(const struct device *dev)
 	USART_TypeDef *UartInstance = UART_STRUCT(dev);
 
 	LL_USART_EnableIT_RXNE(UartInstance);
+	(void)LL_USART_ReceiveData8(UartInstance);
 }
 
 static void uart_stm32_irq_rx_disable(const struct device *dev)
