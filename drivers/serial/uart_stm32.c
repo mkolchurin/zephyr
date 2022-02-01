@@ -658,7 +658,8 @@ static int uart_stm32_fifo_fill(const struct device *dev,
 		LL_USART_TransmitData8(config->usart, tx_data[num_tx++]);
 	}
 	while(!LL_USART_IsActiveFlag_TC(UartInstance)){}
-	uart_irq_tx_disable(dev);
+	
+	// uart_irq_tx_disable(dev);
 	irq_unlock(key);
 
 	return num_tx;
