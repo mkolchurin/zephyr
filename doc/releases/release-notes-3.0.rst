@@ -77,11 +77,20 @@ Removed APIs in this release
 * Removed Kconfig option ``CONFIG_OPENOCD_SUPPORT`` in favor of
   ``CONFIG_DEBUG_THREAD_INFO``.
 
+* Removed ``flash_write_protection_set()`` along with the flash write protection
+  implementation handler.
+
 Deprecated in this release
 ==========================
 
+* Removed ``<power/reboot.h>`` and ``<power/power.h>`` deprecated headers.
+  ``<sys/reboot.h>`` and ``<pm/pm.h>`` should be used instead.
 * :c:macro:`USBD_CFG_DATA_DEFINE` is deprecated in favor of utilizing
   :c:macro:`USBD_DEFINE_CFG_DATA`
+* :c:macro:`SYS_DEVICE_DEFINE` is deprecated in favor of utilizing
+  :c:macro:`SYS_INIT`.
+* :c:func:`device_usable_check` is deprecated in favor of utilizing
+  :c:func:`device_is_ready`.
 
 Stable API changes in this release
 ==================================
@@ -113,6 +122,13 @@ New APIs in this release
 
       * :c:func:`uart_fifo_read_u16` to read data from FIFO.
 
+* Devicetree
+
+  * Added new Devicetree helpers:
+
+    * :c:macro:`DT_INST_ENUM_IDX`
+    * :c:macro:`DT_INST_ENUM_IDX_OR`
+    * :c:macro:`DT_INST_PARENT`
 
 Kernel
 ******
@@ -166,18 +182,28 @@ Boards & SoC Support
 
 * Added support for these SoC series:
 
+  * GigaDevice GD32VF103, GD32F3X0, GD32F403 and GD32F450.
 
 * Removed support for these SoC series:
 
 
 * Made these changes in other SoC series:
 
+  * stm32h7: Added SMPS support
+  * stm32u5: Enabled TF-M
 
 * Changes for ARC boards:
 
 
 * Added support for these ARM boards:
 
+  * GigaDevice GD32F350R-EVAL
+  * GigaDevice GD32F403Z-EVAL
+  * GigaDevice GD32F450I-EVAL
+  * OLIMEX-STM32-H405
+  * ST Nucleo G031K8
+  * ST Nucleo H7A3ZI Q
+  * ST STM32G081B Evaluation
 
 * Added support for these ARM64 boards:
 
@@ -187,9 +213,14 @@ Boards & SoC Support
 
 * Removed support for these X86 boards:
 
+* Added support for these RISC-V boards:
+
+  * GigaDevice GD32VF103V-EVAL
+  * Sipeed Longan Nano and Nano Lite
 
 * Made these changes in other boards:
 
+  * sam_e70_xplained: Added support for CAN-FD driver
 
 * Added support for these following shields:
 
@@ -199,12 +230,15 @@ Drivers and Sensors
 
 * ADC
 
+  * Added support for stm32u5 series
+  * stm32: Added shared IRQ support
 
 * Bluetooth
 
 
 * CAN
 
+  * Add Atmel SAM Bosch m_can CAN-FD Driver
 
 * Clock Control
 
@@ -214,12 +248,17 @@ Drivers and Sensors
 
 * Counter
 
+  * stm32: Added timer based counter driver (stm32f4 only for now).
 
 * DAC
 
+  * Added support for GigaDevice GD32 SoCs
+  * Added support for stm32u5 series
 
 * Disk
 
+  * stm32 sdmmc: Converted from polling to IT driven mode and added Hardware
+    Flow Control option
 
 * Display
 
@@ -229,27 +268,51 @@ Drivers and Sensors
 
 * DMA
 
+  * Added support for suspending and resuming transfers
+  * Added support for SoCs with DMA between application and embedded
+    processors, allows for transfer directions to be identified as such.
 
 * EEPROM
 
+
+* Entropy
+
+  * Added support for stm32u5 series
 
 * ESPI
 
 
 * Ethernet
 
+  * Added support for Synopsys DesignWare MAC driver with implementation
+    on stm32h7 series.
+  * stm32 (hal based): Added promiscuous mode support
+  * stm32 (hal based): Added PTP L2 timestamping support
 
 * Flash
+
+  * stm32g0: Added Dual Bank support
+  * stm32_qspi: General enhancement (Generation of the reset pulse for SPI-NOR memory,
+    Usage of 4IO for read / write (4READ/4PP), Support for different QSPI banks,
+    Support for 4B addressing on spi-nor)
+
+  * ite_i8xxx2: The driver has been reworked so the write/erase protection
+    management has been moved to implementations of the flash_write()
+    and the flash_erase() calls. The driver was keeping the write protection API
+    which was designed to be removed since 2.6 release.
 
 
 * GPIO
 
+  * Added driver for GigaDevice GD32 SoCs
 
 * Hardware Info
 
 
 * I2C
 
+  * Added driver for GigaDevice GD32 SoCs
+  * Added stats functionality to all drivers
 
 * I2S
 
@@ -259,6 +322,8 @@ Drivers and Sensors
 
 * Interrupt Controller
 
+  * Added ECLIC driver for GigaDevice RISC-V GD32 SoCs
+  * Added EXTI driver for GigaDevice GD32 SoCs
 
 * LED
 
@@ -266,29 +331,73 @@ Drivers and Sensors
 * LoRa
 
 
+* MEMC
+
+  *  Added support for stm32f7 series
+
 * Modem
 
+* Pin control
+
+  * Introduced a new state-based pin control (``pinctrl``) API inspired by the
+    Linux design principles. The ``pinctrl`` API will replace the existing
+    pinmux API, so all platforms using pinmux are encouraged to migrate. A
+    detailed guide with design principles and implementation guidelines can be
+    found in :ref:`pinctrl-guide`.
+  * Platforms already supporting the ``pinctrl`` API:
+
+    * GigaDevice GD32
+    * Nordic (preliminary support)
+    * Renesas R-Car
+    * STM32
 
 * PWM
 
+  * stm32: DT bindings: `st,prescaler` property was moved from pwm
+    to parent timer node.
+  * stm32: Implemented PWM capture API
+  * Added driver for GigaDevice GD32 SoCs. Only PWM output is supported.
 
 * Sensor
 
+  * Added Invensense MPU9250 9-axis IMU driver.
+  * Added ITE IT8XX2 tachometer driver.
+  * Added STM L5 die temperature driver.
+  * Added STM I3G4250D gyroscope driver.
+  * Added TI TMP108 driver.
+  * Added Winsen MH-Z19B CO2 driver.
+  * Constified device config access in sbs_gauge and LM75 drivers.
+  * Dropped DEV_DATA/DEV_CFG usage from various drivers.
+  * Moved ODR and range properties from Kconfig to devicetree in various STM
+    drivers.
+  * Refactored INA230 driver to add support for INA237 variant.
+  * Refactored various drivers to use I2C/SPI/GPIO DT APIs.
+  * Enabled level triggered interrupts in LIS2DH driver.
+  * Fixed TMP112 driver to avoid I2C burst write portability issues.
+  * Fixed SENSOR_DEG2RAD_DOUBLE macro in LSM6DS0 driver.
+  * Fixed gain factor in LSM303DLHC magnetometer driver.
 
 * Serial
 
+  * stm32: Implemented half-duplex option.
+  * Added driver for GigaDevice GD32 SoCs. Polling and interrupt driven modes
+    are supported.
 
 * SPI
 
+  * stm32: Implemented Frame format option (TI vs Motorola).
 
 * Timer
 
+  * stm32 lptim: Added support for stm32h7
 
 * USB
 
+  * Added support for stm32u5 series (OTG full speed)
 
 * Watchdog
 
+  * Added support for stm32u5 series (Independent and Window)
 
 * WiFi
 
@@ -359,6 +468,8 @@ Build and Infrastructure
 
 * West (extensions)
 
+  * Added support for gd32isp runner
+
 
 Libraries / Subsystems
 **********************
@@ -376,6 +487,23 @@ Libraries / Subsystems
 
 * Power management
 
+  * Power management resources are now manually allocated by devices using
+    :c:macro:`PM_DEVICE_DEFINE`, :c:macro:`PM_DEVICE_DT_DEFINE` or
+    :c:macro:`PM_DEVICE_DT_INST_DEFINE`. Device instantiation macros take now
+    a reference to the allocated resources. The reference can be obtained using
+    :c:macro:`PM_DEVICE_GET`, :c:macro:`PM_DEVICE_DT_GET` or
+    :c:macro:`PM_DEVICE_DT_INST_GET`. Thanks to this change, devices not
+    implementing support for device power management will not use unnecessary
+    memory.
+  * Device runtime power management API error handling has been simplified.
+  * :c:func:`pm_device_runtime_enable` suspends the target device if not already
+    suspended. This change makes sure device state is always kept in a
+    consistent state.
+  * Improved PM states Devicetree macros naming
+  * Added a new API call :c:func:`pm_state_cpu_get_all` to obtain information
+    about CPU power states.
+  * ``pm/device.h`` is no longer included by ``device.h``, since the device API
+    no longer depends on the PM API.
 
 * Logging
 
@@ -391,6 +519,8 @@ Libraries / Subsystems
 
 * Tracing
 
+  * Support all syscalls being traced using the python syscall generator to
+    introduce a tracing hook call.
 
 * Debug
 
@@ -399,6 +529,15 @@ Libraries / Subsystems
 
 HALs
 ****
+
+* STM32
+
+  * stm32cube/stm32wb and its lib: Upgraded to version V1.12.1
+  * stm32cube/stm32mp1: Upgraded to version V1.5.0
+  * stm32cube/stm32u5: Upgraded to version V1.0.2
+
+* Added `GigaDevice HAL module
+  <https://github.com/zephyrproject-rtos/hal_gigadevice>`_
 
 MCUboot
 *******
@@ -423,10 +562,14 @@ Trusted Firmware-m
 Documentation
 *************
 
+* A new theme is used by the Doxygen HTML pages. It is based on
+  `doxygen-awesome-css <https://github.com/jothepro/doxygen-awesome-css>`_
+  theme.
 
 Tests and Samples
 *****************
 
+* Drivers: clock_control: Added test suite for stm32 (u5, h7).
 
 Issue Related Items
 *******************
