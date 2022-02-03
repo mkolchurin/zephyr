@@ -76,6 +76,9 @@ config UART_INTERRUPT_DRIVEN
 	  This option enables interrupt support for UART allowing console
 	  input and other UART based drivers.
 
+config UART_DIRECTION_CONTROL 
+	bool "Enable UART direction control"
+	
 config UART_LINE_CTRL
 	bool "Serial Line Control API"
 	help

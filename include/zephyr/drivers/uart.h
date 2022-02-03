@@ -110,6 +110,12 @@ enum uart_config_flow_control {
 	UART_CFG_FLOW_CTRL_DTR_DSR,
 };
 
+enum uart_config_direction{
+	UART_CFG_RX_DIRECTION,
+	UART_CFG_TX_DIRECTION,
+	UART_CFG_RX_TX_DIRECTION,
+};
+
 /**
  * @brief UART controller configuration structure
  *
@@ -372,6 +378,9 @@ __subsystem struct uart_driver_api {
 
 #endif
 
+#ifdef CONFIG_UART_DIRECTION_CONTROL
+	int (*direction)(const struct device *dev, uint8_t dir);
+#endif
 	/** Console I/O function */
 	int (*poll_in)(const struct device *dev, unsigned char *p_char);
 	void (*poll_out)(const struct device *dev, unsigned char out_char);
@@ -1560,6 +1569,34 @@ static inline int z_impl_uart_drv_cmd(const struct device *dev, uint32_t cmd,
 		return -ENOSYS;
 	}
 	return api->drv_cmd(dev, cmd, p);
+#endif
+
+	return -ENOTSUP;
+}
+
+/**
+ * @brief Selects direction of UART
+ *
+ * @param dev UART device instance.
+ * @param cmd Selected direction (see enum uart_config_direction).
+ *
+ * @retval 0 If successful.
+ * @retval -ENOSYS If this function is not implemented.
+ * @retval -ENOTSUP If API is not enabled.
+ * @retval -errno Other negative errno value in case of failure.
+ */
+__syscall int uart_direction(const struct device *dev, uint8_t dir);
+
+static inline int z_impl_uart_direction(const struct device *dev, uint8_t dir)
+{
+#ifdef CONFIG_UART_DIRECTION_CONTROL
+	const struct uart_driver_api *api =
+		(const struct uart_driver_api *)dev->api;
+
+	if (api->direction == NULL) {
+		return -ENOSYS;
+	}
+	return api->direction(dev, dir);
 #endif
 
 	return -ENOTSUP;
