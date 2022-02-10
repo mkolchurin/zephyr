@@ -288,6 +288,9 @@ config MCUMGR_SMP_UART_ASYNC_BUF_SIZE
 endif # MCUMGR_SMP_UART_ASYNC
 endif # UART_ASYNC_API
 
+config MCUMGR_SMP_MODBUS
+	bool "Use virtual com port driver over modbus"
+	
 config MCUMGR_SMP_UART_MTU
 	int "UART SMP MTU"
 	default 256
