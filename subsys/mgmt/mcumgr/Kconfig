@@ -300,6 +300,19 @@ config MCUMGR_SMP_UART_MTU
 	  This value must satisfy the following relation:
 	  MCUMGR_SMP_UART_MTU <= MCUMGR_BUF_SIZE + 2
 
+config MCUMGR_SMP_PIPE
+	bool "Pipe mcumgr SMP transport"
+config MCUMGR_SMP_PIPE_MTU
+	int "pipe MTU"
+	default 1500
+
+if MCUMGR_SMP_PIPE
+config MCUMGR_SMP_PIPE_STACK_SIZE
+	int "UDP SMP stack size"
+	default 512
+	help
+	  Stack size of the SMP UDP listening thread
+endif
 
 menuconfig MCUMGR_SMP_UDP
 	bool "UDP mcumgr SMP transport"
