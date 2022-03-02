@@ -21,6 +21,12 @@ struct ll_sync_set {
 	uint16_t volatile timeout_reload; /* Non-zero when sync established */
 	uint16_t timeout_expire;
 
+	/* Member to store periodic advertising sync prepare.
+	 * Also serves as a flag to inform if sync established was
+	 * already generated.
+	 */
+	void (*lll_sync_prepare)(void *param);
+
 #if defined(CONFIG_BT_CTLR_CHECK_SAME_PEER_SYNC) || \
 	defined(CONFIG_BT_CTLR_SYNC_PERIODIC_ADI_SUPPORT)
 	uint8_t peer_id_addr[BDADDR_SIZE];
@@ -43,6 +49,7 @@ struct ll_sync_set {
 	uint8_t is_term:1;
 #endif /* CONFIG_BT_CTLR_SYNC_PERIODIC_CTE_TYPE_FILTERING && !CONFIG_BT_CTLR_CTEINLINE_SUPPORT */
 
+	uint8_t is_stop:1; /* sync terminate requested */
 	uint8_t sync_expire:3; /* countdown of 6 before fail to establish */
 
 #if defined(CONFIG_BT_CTLR_CHECK_SAME_PEER_SYNC)
