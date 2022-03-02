@@ -1504,17 +1504,17 @@ static int uart_stm32_async_init(const struct device *dev)
 
 #ifdef CONFIG_UART_DIRECTION_CONTROL
 static int uart_stm32_direction(const struct device *dev, enum uart_config_direction dir){
-	USART_TypeDef *UartInstance = UART_STRUCT(dev);
+	const struct uart_stm32_config *config = dev->config;
 	switch (dir)
 	{
 	case UART_CFG_RX_DIRECTION:
-		LL_USART_SetTransferDirection(UartInstance, LL_USART_DIRECTION_RX);
+		LL_USART_SetTransferDirection(config->usart, LL_USART_DIRECTION_RX);
 		break;
 	case UART_CFG_TX_DIRECTION:
-		LL_USART_SetTransferDirection(UartInstance, LL_USART_DIRECTION_TX);
+		LL_USART_SetTransferDirection(config->usart, LL_USART_DIRECTION_TX);
 		break;
 	case UART_CFG_RX_TX_DIRECTION:
-		LL_USART_SetTransferDirection(UartInstance, LL_USART_DIRECTION_TX_RX);
+		LL_USART_SetTransferDirection(config->usart, LL_USART_DIRECTION_TX_RX);
 		break;
 	default:
 		return -EINVAL;
