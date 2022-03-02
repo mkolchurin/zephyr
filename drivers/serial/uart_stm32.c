@@ -649,25 +649,14 @@ static int uart_stm32_fifo_fill(const struct device *dev,
 	/* Lock interrupts to prevent nested interrupts or thread switch */
 	key = irq_lock();
 
-//TODO: КОСТЫЛЬ
-	// while ((size - num_tx > 0) &&
-	//        LL_USART_IsActiveFlag_TXE(UartInstance)) {
-	// 	/* TXE flag will be cleared with byte write to DR|RDR register */
-
-	// 	/* Send a character (8bit , parity none) */
-	// 	LL_USART_TransmitData8(UartInstance, tx_data[num_tx++]);
-	// }
-	while ((size - num_tx > 0)) {
-		while(!LL_USART_IsActiveFlag_TXE(UartInstance)){}
+	while ((size - num_tx > 0) &&
+	       LL_USART_IsActiveFlag_TXE(UartInstance)) {
 		/* TXE flag will be cleared with byte write to DR|RDR register */
 
 		/* Send a character (8bit , parity none) */
 		LL_USART_TransmitData8(UartInstance, tx_data[num_tx++]);
-		
 	}
-	while(!LL_USART_IsActiveFlag_TC(UartInstance)){}
-	
-	// uart_irq_tx_disable(dev);
+
 	irq_unlock(key);
 
 	return num_tx;

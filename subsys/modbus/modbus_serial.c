@@ -393,9 +393,7 @@ static void cb_handler_tx(struct modbus_context *ctx)
 				   cfg->uart_buf_ctr);
 		cfg->uart_buf_ctr -= n;
 		cfg->uart_buf_ptr += n;
-	} 
-	//TODO КОСТЫЛЬ
-	if (cfg->uart_buf_ctr == 0) {
+	} else {
 		/* Disable transmission */
 		cfg->uart_buf_ptr = &cfg->uart_buf[0];
 		modbus_serial_tx_off(ctx);
