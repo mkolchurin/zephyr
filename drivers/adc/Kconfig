@@ -70,6 +70,8 @@ source "drivers/adc/Kconfig.adc_emul"
 
 source "drivers/adc/Kconfig.test"
 
+source "drivers/adc/Kconfig.ads869x"
+
 source "drivers/adc/Kconfig.ads1x1x"
 
 endif # ADC
