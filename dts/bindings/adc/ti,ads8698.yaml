@@ -1,0 +1,31 @@
+description: Texas Instruments ADS8698 Analog to digital converter
+
+include: [adc-controller.yaml, spi-device.yaml]
+
+# properties:
+#     "#io-channel-cells":
+#       const: 1
+
+# io-channel-cells:
+#     - channel
+# properties:
+#     nchannels:
+#         type: int
+#         required: true
+#         description: Number of emulated ADC channels. Should be in 1-32 range.
+#     ref-internal-mv:
+#         type: int
+#         required: false
+#         default: 0
+#         description:
+#           Internal reference voltage in mV. If not provided or set to zero,
+#           channel setup with ADC_REF_INTERNAL will fail.
+#     ref-vdd-mv:
+#         type: int
+#         required: false
+#         default: 0
+#         description:
+#           VDD reference voltage in mV. If not provided or set to zero,
+#           channel setup with ADC_REF_VDD_X will fail.
+
+compatible: "ti,ads8698-adc"
