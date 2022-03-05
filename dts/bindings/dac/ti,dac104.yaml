@@ -1,0 +1,15 @@
+description: Texas Instruments DAC104S085 digital to analog converter
+
+include: [dac-controller.yaml, spi-device.yaml]
+
+io-channel-cells:
+    - output
+
+properties:
+    "#io-channel-cells":
+      const: 1
+
+compatible: "ti,dac104-dac"
+
+
+

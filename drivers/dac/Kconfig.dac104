@@ -1,0 +1,9 @@
+
+
+
+config DAC_DAC104
+	bool "TI DACx0508 DAC driver"
+	depends on SPI
+	help
+	  Enable the driver for the TI DAC104.
+
