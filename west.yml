@@ -98,7 +98,7 @@ manifest:
       groups:
         - hal
     - name: hal_nxp
-      revision: 9629f15fd80169cc9669e3fbb1260467c3aeb175
+      revision: 072bf81d2ffcb764a6c63041cec876cbfb614c6a
       path: modules/hal/nxp
       groups:
         - hal
@@ -157,7 +157,7 @@ manifest:
       path: modules/fs/littlefs
       groups:
         - fs
-      revision: pull/9/head
+      revision: 7b2cf4ba759bd530b543644e2790b07cf20cd6aa
     - name: loramac-node
       revision: 12019623bbad9eb54fe51066847a7cbd4b4eac57
       path: modules/lib/loramac-node
@@ -195,7 +195,7 @@ manifest:
       revision: cfd050ff38a9d028dc211690b2ec35971128e45e
       path: modules/lib/open-amp
     - name: openthread
-      revision: 4ae8fe2ef1bfe0a96188d3dfa970f5d63386281b
+      revision: 0e141a556a11d82b1ee7fda00be9d1553375a687
       path: modules/lib/openthread
     - name: segger
       revision: 3a52ab222133193802d3c3b4d21730b9b1f1d2f6
