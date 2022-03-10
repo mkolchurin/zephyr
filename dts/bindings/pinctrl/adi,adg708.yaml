@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description: Analog Devices ADG708 8 channel MUX
+
+compatible: "adi,adg708"
+
+include: [base.yaml]
+
+properties:
+
+    label:
+      required: true
+
+    ctrl-gpios:
+      type: phandle-array
+      required: true
+
