@@ -51,6 +51,7 @@ LOG_MODULE_REGISTER(adc_ads869x, CONFIG_ADC_LOG_LEVEL);
 #define ADS8688_PROG_WR_BIT BIT(8)
 #define ADS8688_PROG_DONT_CARE_BITS 8
 
+// #define ADS8698_AUX_CH 8
 // channels range
 enum ADS8698_ranges {
 	RANGE_CH_PLUSMINUS_2_5 = 0b0,
@@ -78,7 +79,7 @@ struct adc_ads869x_chan_cfg {
 
 struct adc_ads869x_config {
 	struct spi_dt_spec bus;
-	uint8_t channels;
+	uint16_t channels;
 };
 
 struct adc_ads869x_data {
@@ -153,26 +154,28 @@ static int ads869x_channel_setup(const struct device *dev,
 
 	WRITE_BIT(data->differential, channel_cfg->channel_id, channel_cfg->differential);
 
-	switch (channel_cfg->gain) {
-	case ADC_GAIN_4:
-		if (channel_cfg->differential == 1)
-			ads869x_set_range(dev, channel_cfg->channel_id, RANGE_CH_PLUSMINUS_0_625);
-		else
-			ads869x_set_range(dev, channel_cfg->channel_id, RANGE_CH_PLUS1_25);
-		break;
-	case ADC_GAIN_2:
-		if (channel_cfg->differential == 1)
-			ads869x_set_range(dev, channel_cfg->channel_id, RANGE_CH_PLUSMINUS_1_25);
-		else
-			ads869x_set_range(dev, channel_cfg->channel_id, RANGE_CH_PLUS2_5);
-		break;
-	case ADC_GAIN_1:
-		if (channel_cfg->differential == 1)
-			ads869x_set_range(dev, channel_cfg->channel_id, RANGE_CH_PLUSMINUS_2_5);
-	default:
-		LOG_ERR("unsupported channel gain");
-		break;
-	}
+	// if(channel_cfg->channel_id < 8){
+		switch (channel_cfg->gain) {
+		case ADC_GAIN_4:
+			if (channel_cfg->differential == 1)
+				ads869x_set_range(dev, channel_cfg->channel_id, RANGE_CH_PLUSMINUS_0_625);
+			else
+				ads869x_set_range(dev, channel_cfg->channel_id, RANGE_CH_PLUS1_25);
+			break;
+		case ADC_GAIN_2:
+			if (channel_cfg->differential == 1)
+				ads869x_set_range(dev, channel_cfg->channel_id, RANGE_CH_PLUSMINUS_1_25);
+			else
+				ads869x_set_range(dev, channel_cfg->channel_id, RANGE_CH_PLUS2_5);
+			break;
+		case ADC_GAIN_1:
+			if (channel_cfg->differential == 1)
+				ads869x_set_range(dev, channel_cfg->channel_id, RANGE_CH_PLUSMINUS_2_5);
+		default:
+			LOG_ERR("unsupported channel gain");
+			break;
+		}
+	// }
 	LOG_DBG("Set gain %d; differential %d; ACQ time %d", channel_cfg->gain,
 		channel_cfg->differential, channel_cfg->acquisition_time);
 
@@ -342,7 +345,7 @@ static int ads869x_read_channel(const struct device *dev, uint8_t channel, uint3
 	const struct adc_ads869x_config *config = dev->config;
 	struct adc_ads869x_data *data = dev->data;
 	union tx_rx_t {
-		uint8_t d8[4];
+		uint8_t d8[5];
 		uint32_t d32;
 	};
 	union tx_rx_t t[2];
@@ -354,24 +357,29 @@ static int ads869x_read_channel(const struct device *dev, uint8_t channel, uint3
 	tmp = ADS8688_CMD_REG(ADS8688_CMD_REG_NOOP);
 	tmp <<= ADS8688_CMD_DONT_CARE_BITS;
 	t[1].d32 = sys_cpu_to_be32(tmp);
+	LOG_HEXDUMP_DBG(&t[0].d8, 5, "ADC TX");
 
+	struct spi_buf tx_buf[1] = { { .buf = &(t[0].d8[0]), .len = 5 } };
+	struct spi_buf_set tx = { .buffers = tx_buf, .count = ARRAY_SIZE(tx_buf) };
 	int err;
-	const struct spi_buf tx_buf[2] = { { .buf = &(t[0].d8[0]), .len = 4 },
-					   { .buf = &(t[1].d8[0]), .len = 4 } };
-	const struct spi_buf rx_buf[2] = { { .buf = NULL, .len = 1 },
-					   { .buf = &(t[1].d8[0]), .len = 4 } };
+
+	err = spi_write_dt(&config->bus, &tx);
+
+	tx_buf[0].buf = NULL; 
+	tx_buf[0].len = 5;
+	const struct spi_buf rx_buf[] = { { .buf = &(t[1].d8[0]), .len = 5 } };
 	const struct spi_buf_set rx = { .buffers = rx_buf, .count = ARRAY_SIZE(rx_buf) };
-	const struct spi_buf_set tx = { .buffers = tx_buf, .count = ARRAY_SIZE(tx_buf) };
+	tx.buffers = tx_buf; tx.count = ARRAY_SIZE(tx_buf);
 
 	err = spi_transceive_dt(&config->bus, &tx, &rx);
+	
 	if (err) {
 		return err;
 	}
-	*result = (sys_be32_to_cpu(t[1].d32) >> 6) & 0x3ffff;
-
+	*result = (unsigned int) ((((unsigned int) t[1].d8[2]) << 16
+			| ((unsigned int) t[1].d8[3]) << 8 | (unsigned int) t[1].d8[4]) >> 6);
+	
 	LOG_HEXDUMP_DBG(&t[1].d8, 5, "ADC RX");
-
-	LOG_DBG("mv '%d'", *result);
 	return 0;
 }
 
@@ -392,32 +400,18 @@ static void ads869x_acquisition_thread(struct adc_ads869x_data *data)
 
 	while (true) {
 		k_sem_take(&data->sem, K_FOREVER);
-		int first = 1;
 		err = 0;
-
-		int fake_ch = find_msb_set(data->channels);
-		WRITE_BIT(data->channels, fake_ch, 1);
-
 		while (data->channels) {
 			uint32_t result = 0;
 			unsigned int chan = find_lsb_set(data->channels) - 1;
-
-			LOG_DBG("reading channel %d", chan);
-
 			err = ads869x_read_channel(data->dev, chan, &result);
 			if (err) {
 				adc_context_complete(&data->ctx, err);
 				break;
 			}
-
 			LOG_DBG("read channel %d, result = %d", chan, result);
-
 			WRITE_BIT(data->channels, chan, 0);
-			if (first) {
-				first = 0;
-			} else {
-				*data->buf++ = result;
-			}
+			*data->buf++ = result;
 		}
 
 		if (!err) {
