@@ -1,0 +1,15 @@
+description: Texas Instruments DAC6311 10bit, Single Channel, 80uA, 2.0V-5.5V DAC
+
+include: [dac-controller.yaml, spi-device.yaml]
+
+io-channel-cells:
+    - output
+
+properties:
+    "#io-channel-cells":
+      const: 1
+
+compatible: "ti,dac6311-dac"
+
+
+

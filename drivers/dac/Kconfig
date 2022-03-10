@@ -48,4 +48,6 @@ source "drivers/dac/Kconfig.gd32"
 
 source "drivers/dac/Kconfig.dac104"
 
+source "drivers/dac/Kconfig.dac6311"
+
 endif # DAC
