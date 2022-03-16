@@ -333,6 +333,7 @@ linux	Linux-specific binding
 linx	Linx Technologies
 litex	LiteX SoC builder
 lltc	Linear Technology Corporation
+lmt	LMT Ltd.
 logicpd	Logic PD, Inc.
 logictechno	Logic Technologies Limited
 longcheer	Longcheer Technology (Shanghai) Co., Ltd.
