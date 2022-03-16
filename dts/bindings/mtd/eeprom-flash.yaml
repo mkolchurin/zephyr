@@ -1,0 +1,7 @@
+
+include: base.yaml
+
+description: Convert EEPROM device to Flash
+
+compatible: "eeprom-flash"
+
