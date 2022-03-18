@@ -1,0 +1,9 @@
+
+module = ADG708
+module-str = adg708_mux
+source "subsys/logging/Kconfig.template.log_config"
+
+config ADG708
+	bool "ADG708 multiplexer driver"
+	help
+	  Enable driver for ADG708 multiplexer

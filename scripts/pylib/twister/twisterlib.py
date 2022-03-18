@@ -15,13 +15,11 @@ import shutil
 import shlex
 import signal
 import threading
-import concurrent.futures
 from collections import OrderedDict
 import queue
 import time
 import csv
 import glob
-import concurrent
 import xml.etree.ElementTree as ET
 import logging
 from pathlib import Path
@@ -2494,14 +2492,18 @@ class ProjectBuilder(FilterBuilder):
                 inst = res.get("instance", None)
                 if inst and inst.status == "skipped":
                     results.skipped_runtime += 1
-
                 if res.get('returncode', 1) > 0:
                     pipeline.put({"op": "report", "test": self.instance})
                 else:
-                    if self.instance.run and self.instance.handler:
-                        pipeline.put({"op": "run", "test": self.instance})
-                    else:
-                        pipeline.put({"op": "report", "test": self.instance})
+                    pipeline.put({"op": "gather_metrics", "test": self.instance})
+
+        elif op == "gather_metrics":
+            self.gather_metrics(self.instance)
+            if self.instance.run and self.instance.handler:
+                pipeline.put({"op": "run", "test": self.instance})
+            else:
+                pipeline.put({"op": "report", "test": self.instance})
+
         # Run the generated binary using one of the supported handlers
         elif op == "run":
             logger.debug("run test: %s" % self.instance.name)
@@ -2719,6 +2721,29 @@ class ProjectBuilder(FilterBuilder):
 
         sys.stdout.flush()
 
+    def gather_metrics(self, instance):
+        if self.suite.enable_size_report and not self.suite.cmake_only:
+            self.calc_one_elf_size(instance)
+        else:
+            instance.metrics["ram_size"] = 0
+            instance.metrics["rom_size"] = 0
+            instance.metrics["unrecognized"] = []
+
+    @staticmethod
+    def calc_one_elf_size(instance):
+        if instance.status not in ["error", "failed", "skipped"]:
+            if instance.platform.type != "native":
+                size_calc = instance.calculate_sizes()
+                instance.metrics["ram_size"] = size_calc.get_ram_size()
+                instance.metrics["rom_size"] = size_calc.get_rom_size()
+                instance.metrics["unrecognized"] = size_calc.unrecognized_sections()
+            else:
+                instance.metrics["ram_size"] = 0
+                instance.metrics["rom_size"] = 0
+                instance.metrics["unrecognized"] = []
+
+            instance.metrics["handler_time"] = instance.handler.duration if instance.handler else 0
+
 class TestSuite(DisablePyTestCollectionMixin):
     config_re = re.compile('(CONFIG_[A-Za-z0-9_]+)[=]\"?([^\"]*)\"?$')
     dt_re = re.compile('([A-Za-z0-9_]+)[=]\"?([^\"]*)\"?$')
@@ -2825,7 +2850,7 @@ class TestSuite(DisablePyTestCollectionMixin):
 
     def check_zephyr_version(self):
         try:
-            subproc = subprocess.run(["git", "describe", "--abbrev=12"],
+            subproc = subprocess.run(["git", "describe", "--abbrev=12", "--always"],
                                      stdout=subprocess.PIPE,
                                      universal_newlines=True,
                                      cwd=ZEPHYR_BASE)
@@ -3471,21 +3496,6 @@ class TestSuite(DisablePyTestCollectionMixin):
         for instance in instance_list:
             self.instances[instance.name] = instance
 
-    @staticmethod
-    def calc_one_elf_size(instance):
-        if instance.status not in ["error", "failed", "skipped"]:
-            if instance.platform.type != "native":
-                size_calc = instance.calculate_sizes()
-                instance.metrics["ram_size"] = size_calc.get_ram_size()
-                instance.metrics["rom_size"] = size_calc.get_rom_size()
-                instance.metrics["unrecognized"] = size_calc.unrecognized_sections()
-            else:
-                instance.metrics["ram_size"] = 0
-                instance.metrics["rom_size"] = 0
-                instance.metrics["unrecognized"] = []
-
-            instance.metrics["handler_time"] = instance.handler.duration if instance.handler else 0
-
     def add_tasks_to_queue(self, pipeline, build_only=False, test_only=False):
         for instance in self.instances.values():
             if build_only:
@@ -3552,20 +3562,6 @@ class TestSuite(DisablePyTestCollectionMixin):
             logger.info("Execution interrupted")
             for p in processes:
                 p.terminate()
-
-        # FIXME: This needs to move out.
-        if self.enable_size_report and not self.cmake_only:
-            # Parallelize size calculation
-            executor = concurrent.futures.ThreadPoolExecutor(self.jobs)
-            futures = [executor.submit(self.calc_one_elf_size, instance)
-                       for instance in self.instances.values()]
-            concurrent.futures.wait(futures)
-        else:
-            for instance in self.instances.values():
-                instance.metrics["ram_size"] = 0
-                instance.metrics["rom_size"] = 0
-                instance.metrics["handler_time"] = instance.handler.duration if instance.handler else 0
-                instance.metrics["unrecognized"] = []
 
         return results
 
@@ -3634,6 +3630,14 @@ class TestSuite(DisablePyTestCollectionMixin):
             skips = 0
             duration = 0
 
+            eleTestsuite = None
+            if os.path.exists(filename) and append:
+                ts = eleTestsuites.findall(f'testsuite/[@name="{p}"]')
+                if ts:
+                    eleTestsuite = ts[0]
+                else:
+                    logger.info(f"Did not find any existing results for {p}")
+
             for _, instance in inst.items():
                 handler_time = instance.metrics.get('handler_time', 0)
                 duration += handler_time
@@ -3644,7 +3648,8 @@ class TestSuite(DisablePyTestCollectionMixin):
                         elif instance.results[k] == 'BLOCK':
                             errors += 1
                         elif instance.results[k] == 'SKIP' or instance.status in ['skipped']:
-                            skips += 1
+                            if not eleTestsuite or not eleTestsuite.findall(f'testcase/[@name="{k}"]'):
+                                skips += 1
                         else:
                             fails += 1
                 else:
@@ -3669,26 +3674,15 @@ class TestSuite(DisablePyTestCollectionMixin):
                 continue
 
             run = p
-            eleTestsuite = None
             if not report_skipped and total == skips:
                 continue
 
             # When we re-run the tests, we re-use the results and update only with
             # the newly run tests.
-            if os.path.exists(filename) and append:
-                ts = eleTestsuites.findall(f'testsuite/[@name="{p}"]')
-                if ts:
-                    eleTestsuite = ts[0]
-                    eleTestsuite.attrib['failures'] = "%d" % fails
-                    eleTestsuite.attrib['errors'] = "%d" % errors
-                    eleTestsuite.attrib['skipped'] = "%d" % skips
-                else:
-                    logger.info(f"Did not find any existing results for {p}")
-                    eleTestsuite = ET.SubElement(eleTestsuites, 'testsuite',
-                                name=run, time="%f" % duration,
-                                tests="%d" % (total),
-                                failures="%d" % fails,
-                                errors="%d" % (errors), skipped="%s" % (skips))
+            if eleTestsuite:
+                eleTestsuite.attrib['failures'] = "%d" % fails
+                eleTestsuite.attrib['errors'] = "%d" % errors
+                eleTestsuite.attrib['skipped'] = "%d" % (skips + int(eleTestsuite.attrib['skipped']))
             else:
                 eleTestsuite = ET.SubElement(eleTestsuites, 'testsuite',
                                                 name=run, time="%f" % duration,

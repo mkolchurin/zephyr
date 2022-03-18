@@ -14,7 +14,7 @@
 #include <mgmt/mcumgr/serial.h>
 #include <drivers/console/modbus_mcumgr.h>
 
-static const struct modbus_smp *modbus_com;
+static struct modbus_smp *modbus_com;
 
 /** Callback to execute when a valid fragment has been received. */
 static modbus_mcumgr_recv_fn *modbus_mgumgr_recv_cb;

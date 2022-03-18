@@ -3,8 +3,6 @@
 # Copyright (c) 2016-2017 Nordic Semiconductor ASA
 # SPDX-License-Identifier: Apache-2.0
 
-comment "BLE Controller support"
-
 # The following symbols are enabled depending if the controller actually
 # supports the respective features.
 
@@ -69,9 +67,6 @@ config BT_CTLR_CHAN_SEL_2_SUPPORT
 config BT_CTLR_MIN_USED_CHAN_SUPPORT
 	bool
 
-config BT_CTLR_DTM_HCI_SUPPORT
-	bool
-
 config BT_CTLR_SMI_SUPPORT
 	bool
 
@@ -113,7 +108,7 @@ endchoice
 comment "BLE Controller configuration"
 
 config BT_CTLR_CRYPTO
-	bool "Enable crypto functions in Controller"
+	bool "Crypto functions in Controller"
 	default y
 	select ENTROPY_GENERATOR
 	help
@@ -132,7 +127,7 @@ config BT_CTLR_HCI_VS_BUILD_INFO
 	  already included information.
 
 config BT_CTLR_AD_DATA_BACKUP
-	bool "Enable Legacy AD Data backup"
+	bool "Legacy AD Data backup"
 	depends on BT_PERIPHERAL || BT_CTLR_ADV_EXT
 	default y
 	help
@@ -143,7 +138,7 @@ config BT_CTLR_AD_DATA_BACKUP
 	  Advertising or switch between Legacy and Extended Advertising.
 
 config BT_CTLR_HCI_ADV_HANDLE_MAPPING
-	bool "Enable advertising set handle mapping between HCI and LL"
+	bool "Advertising set handle mapping between HCI and LL"
 	depends on BT_CTLR_ADV_EXT
 	default y if BT_HCI_RAW
 	help
@@ -231,7 +226,7 @@ config BT_CTLR_ISO_TX_BUFFER_SIZE
 	  Read Buffer Size V2 command response.
 
 config BT_CTLR_ISO_VENDOR_DATA_PATH
-	bool "Enable vendor-specific ISO data path"
+	bool "Vendor-specific ISO data path"
 	depends on BT_CTLR_SYNC_ISO || BT_CTLR_CONN_ISO
 
 choice BT_CTLR_TX_PWR
@@ -749,18 +744,6 @@ config BT_CTLR_READ_ISO_LINK_QUALITY
 	help
 	  Enable support for LE Read ISO Link Quality command.
 
-config BT_CTLR_DTM
-	bool
-	help
-	  Enable support for Direct Test Mode in the Controller.
-
-config BT_CTLR_DTM_HCI
-	bool "Direct Test Mode over HCI"
-	depends on BT_CTLR_DTM_HCI_SUPPORT
-	select BT_CTLR_DTM
-	help
-	  Enable support for Direct Test Mode over the HCI transport.
-
 config BT_CTLR_SMI_RX
 	bool "Stable modulation index - Receiver"
 	depends on BT_CTLR_SMI_SUPPORT
@@ -787,6 +770,7 @@ config BT_CTLR_HCI_CODEC_AND_DELAY_INFO
 
 rsource "Kconfig.df"
 rsource "Kconfig.ll_sw_split"
+rsource "Kconfig.dtm"
 
 config BT_CTLR_ASSERT_HANDLER
 	bool "Application Defined Assertion Handler"

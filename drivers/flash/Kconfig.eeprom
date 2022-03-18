@@ -1,0 +1,4 @@
+config FLASH_EEPROM
+	bool "Convert eeprom parent device to FLASH"
+	help
+	  Convert eeprom parent device to FLASH

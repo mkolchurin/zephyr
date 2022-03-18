@@ -44,7 +44,7 @@ module-str = flash
 source "subsys/logging/Kconfig.template.log_config"
 
 config FLASH_SHELL
-	bool "Enable Flash shell"
+	bool "Flash shell"
 	depends on SHELL && FLASH_PAGE_LAYOUT
 	default y
 	help
@@ -99,5 +99,7 @@ source "drivers/flash/Kconfig.simulator"
 source "drivers/flash/Kconfig.rv32m1"
 
 source "drivers/flash/Kconfig.nordic_qspi_nor"
+
+source "drivers/flash/Kconfig.eeprom"
 
 endif # FLASH

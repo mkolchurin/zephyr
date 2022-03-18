@@ -1,0 +1,52 @@
+description: |
+        GPIO pins exposed on LMT Birds&Bushes connector.
+        The B&B layout provides one 40 pin connector, with 
+        6 general purpose IO channels, 1 power channel,
+        3 input/output power channels and 1 special channel
+
+        1   +5            2 GND      |  pwr                                         
+        3   VDDIO         4 GND      |  pwr_io   
+        5   io0/sync      6 io1/data |  chnl_s   
+        7   io2/irq       8 io3/data |           
+        9   io0/sync     10 io1/data |  chnl_a   
+        11  io2/irq      12 io3/data |           
+        13  io0/sync     14 io1/data |  chnl_b   
+        15  io2/irq      16 io3/data |           
+        17  VDDIO        18 GND      |  pwr_io   
+        19  io0/sync     20 io1/data |  chnl_c   
+        21  io2/irq      22 io3/data |          
+        23  io0/sync     24 io1/data |  chnl_d   
+        25  io2/irq      25 io3/data |           
+        27  io0/sync     28 io1/data |  chnl_e   
+        29  io2/irq      30 io3/data |           
+        31  VDDIO        32 GND      |  pwr_io 
+        33               34          |  special (33-39)
+        35               36          |
+        37               38          |
+        39               40 Shield   |
+        
+        chnl_X (x - a,b,c,d,e)
+        IO_Name | io0/sync | io1/data | io2/irq | io3/data |
+        ----------------------------------------------------|
+        D_DATA  |  ddata0   | ddata1   | ddata2  | ddata3   |
+        ----------------------------------------------------|
+        A_DATA  |  adata0   | adata1   | adata2  | adata3   |
+        ----------------------------------------------------|
+        SPI     |  MOSI     | MISO     | CLK     | -        |
+        ----------------------------------------------------|
+        UART_FC |           |          | RTS     | CTS      |
+        UART_IO |  TXD      | RXD      | IO2     | IO3      |
+        UART    |           |          | ---     | ---      |
+        CAN 2.0B|           |          | ---     | ---      |
+        ----------------------------------------------------|
+        I2C     |  SCL      | SDA      | ---     | ---      |
+        I2C_ID  |           |          | IRQb    | RSTb     |
+        ----------------------------------------------------|
+        JTAG    |  TDO      | TDI      | TCK     | TMS      |
+        ----------------------------------------------------|
+        GPIO    | GPIO_0    | GPIO_1   | GPIO_2  | GPIO_3   |        
+
+
+compatible: "lmt,bb-header"
+
+include: [gpio-nexus.yaml, base.yaml]
