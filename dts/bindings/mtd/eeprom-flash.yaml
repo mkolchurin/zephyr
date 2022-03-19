@@ -3,5 +3,13 @@ include: base.yaml
 
 description: Convert EEPROM device to Flash
 
+properties:
+  page-count:
+    type: int
+    required: true
+  page-size:
+    type: int
+    required: true
+
 compatible: "eeprom-flash"
 
