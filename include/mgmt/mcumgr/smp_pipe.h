@@ -5,11 +5,6 @@
 extern "C" {
 #endif
 
-// int smp_pipe_open(void);
-
-// int smp_pipe_close(void);
-
-// int smp_pipe_rx_size(void );
 int smp_pipe_rx(unsigned char *buf, unsigned int len);
 int smp_pipe_set_tx(int (*t)(unsigned char * m, unsigned int s));
 
