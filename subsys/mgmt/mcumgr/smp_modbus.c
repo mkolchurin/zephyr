@@ -165,7 +165,6 @@ static int smp_modbus_init(const struct device *dev)
 
 	modbus_virtual_com_init(&modbus_com);
 	modbus_mcumgr_register(&modbus_com, &smp_modbus_rx_frag, &modbus_isr_handler);
-	// uart_mcumgr_register(smp_uart_rx_frag);
 
 	return 0;
 }

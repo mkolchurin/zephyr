@@ -1,12 +1,6 @@
-/*
- * Copyright (c) 2019, Prevas A/S
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 /**
  * @file
- * @brief UDP transport for the mcumgr SMP protocol.
+ * @brief Pipe transport for the mcumgr SMP protocol.
  */
 
 #include <zephyr.h>
@@ -41,16 +35,6 @@ static uint16_t smp_pipe_get_mtu(const struct net_buf *nb)
 	return CONFIG_MCUMGR_SMP_PIPE_MTU;
 }
 
-// static int smp_pipe_ud_copy(struct net_buf *dst, const struct net_buf *src)
-// {
-// 	struct sockaddr *src_ud = net_buf_user_data(src);
-// 	struct sockaddr *dst_ud = net_buf_user_data(dst);
-
-// 	net_ipaddr_copy(dst_ud, src_ud);
-
-// 	return MGMT_ERR_EOK;
-// }
-
 int smp_pipe_rx(uint8_t *buf, uint32_t len)
 {
 	struct net_buf *nb;
@@ -71,10 +55,9 @@ static int _smp_pipe_tx(struct zephyr_smp_transport *zst, struct net_buf *nb)
 
 	int ret = 0;
 	if (smp_pipe_tx != NULL) {
-        uint8_t data[nb->len];
-        uint32_t len = nb->len;
-        memcpy(data, nb->data, len);
-		LOG_DBG("Call pipe tx impl");
+		uint8_t data[nb->len];
+		uint32_t len = nb->len;
+		memcpy(data, nb->data, len);
 		ret = (*smp_pipe_tx)(data, len);
 	} else {
 		LOG_ERR("Pipe tx not implemented");
@@ -90,14 +73,15 @@ static int smp_pipe_init(const struct device *dev)
 	ARG_UNUSED(dev);
 
 	zephyr_smp_transport_init(&pipe_config.pipe.smp_transport, _smp_pipe_tx, smp_pipe_get_mtu,
-				  NULL/*smp_pipe_ud_copy*/, NULL);
+				  NULL, NULL);
 	smp_pipe_tx = NULL;
 	return MGMT_ERR_EOK;
 }
 
-SYS_INIT(smp_pipe_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
-
 int smp_pipe_set_tx(int (*t)(unsigned char *m, unsigned int s))
 {
 	smp_pipe_tx = t;
+	return 0;
 }
+
+SYS_INIT(smp_pipe_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);

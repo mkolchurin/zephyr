@@ -108,7 +108,6 @@ static void modbus_mcumgr_isr()
 {
 	struct modbus_mcumgr_rx_buf *rx_buf;
 	uint8_t buf;
-	int chunk_len = 1;
 	while (modbus_vcom_poll_in(modbus_com, &buf) > 0) {
 		rx_buf = uart_mcumgr_rx_byte(buf);
 		if (rx_buf != NULL) {
