@@ -66,7 +66,7 @@ static int dac104_reg_write(const struct device *dev, uint8_t addr,
 	tx_message = sys_cpu_to_be16(tx_message);
 
 	LOG_DBG("tx %d, op = '%d', addr = '%d', data = '%d'", tx_message, op, addr, data);
-	LOG_HEXDUMP_DBG((uint8_t *)tx_message, 2, "adc_write" );
+	LOG_HEXDUMP_DBG((uint8_t *)&tx_message, 2, "adc_write" );
 	
 	if (k_is_in_isr()) {
 		/* Prevent SPI transactions from an ISR */
@@ -133,7 +133,6 @@ static int dac104_init(const struct device *dev)
 {
 	const struct dac104_config *config = dev->config;
 	struct dac104_data *data = dev->data;
-	int ret;
 
 	if (!spi_is_ready(&config->bus)) {
 		LOG_ERR("SPI bus %s not ready", config->bus.bus->name);
