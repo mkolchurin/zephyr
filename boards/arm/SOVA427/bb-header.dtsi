@@ -1,0 +1,41 @@
+/ {
+
+	bb_header: connector {
+		compatible = "lmt,bb-header";
+		#gpio-cells = <2>;
+		gpio-map-mask = <0xffffffff 0xffffffc0>;
+		gpio-map-pass-thru = <0 0x3f>;
+		gpio-map = 
+			  /*<1> +5V		   							,<2> GND
+			  	<3> VDDIO       						,<4> GND */
+				<5 0 &gpiob 8 0>	/*i2c_SCL */		,<6 0 &gpiob 9 0> 	/*i2c_SDA */,
+				<7 0 &gpiob 5 0>	/*i2c_SMBA */  		,<8 0 &gpiod 7 0> 	/*i2c_nRST */,
+				<9 0 &gpiod 5 0>	/*USART2/CAN_TX */	,<10 0 &gpiod 6 0> 	/*USART2/CAN_RX */,
+				<11 0 &gpiod 4 0>	/*USART2_RTS */ 	,<12 0 &gpiod 3 0>	/*USART2_CTS */,
+				<13 0 &gpiob 6 0>	/*USART1_TX */		,<14 0 &gpiob 7 0>	/*USART1_RX */,
+				<15 0 &gpioe 3 0>	/*USART1_RTS_SW */	,<16 0 &gpioe 4 0>	/*USART1_CTS_SW */,
+			  /*<17> VDDIO					     		,<18> GND */
+				<19 0 &gpioc 12 0>	/*U3_TX/SPI3_MOSI */,<20 0 &gpioc 11 0>  /*U3_RX/SPI3_MISO */,
+				<21 0 &gpioс 10 0> 	/*U3_RTS/SPI3_SCK */,<22 0 &gpiod 11 0> /*U3_CTS/SPI3_nCS */,
+				<23 0 &gpioe 8 0>  	/*TIM1_CH1N */ 		,<24 0 &gpioe 10 0>  /*TIM1_CH2N */,
+				<25 0 &gpioe 12 0>	/*TIM1_CH3N */		,<26 0 &gpioe 15 0>  /*TIM1_BKIN */,
+				<27 0 &gpioe 9 0>	/*T1_CH1/A5 */		,<28 0 &gpioe 11 0>  /*T1_CH2/A6 */,
+				<29 0 &gpioe 13 0>	/*T1_CH3/A8 */ 		,<30 0 &gpioe 14 0>  /*T1_CH4/A9 */;
+			 /* <31> VDDIO	     						,<32> GND
+			    <33> RX_N								,<34> LDLA
+			 	<35> RX_P								,<36> LDSPD
+				<37> TX_N								,<38> GND
+				<39> TX_P								,<40> Shield*/
+			  								
+	};
+};
+
+chnl_s: &i2c1 {};
+	
+chnl_a: &usart2 {};
+
+chnl_b: &usart1 {};
+
+chnl_c: &spi3 {};
+
+

@@ -1,0 +1,22 @@
+identifier: SOVA427
+name: LMT Ltd. SOVA427
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - xtools
+  - gnuarmemb
+ram: 192
+flash: 2048
+supported:
+  - netif:eth
+  - i2c
+  - spi
+  - gpio
+  - pwm
+  - counter
+  - usb_device
+  - watchdog
+  - adc
+  - dac
+  - dma

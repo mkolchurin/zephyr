@@ -1,0 +1,3 @@
+config BOARD_SOVA427
+	bool "SOVA427 bird Board"
+	depends on SOC_STM32F427XX
