@@ -20,7 +20,7 @@ config ADC_ADS869X_ACQUISITION_THREAD_STACK_SIZE
 
 config ADC_ADS869X_ACQUISITION_THREAD_PRIO
 	int "Priority for the ADC data acquisition thread"
-	default 14
+	default 0
 	help
 	  Priority level for the internal ADC data acquisition thread.
 
