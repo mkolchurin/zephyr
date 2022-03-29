@@ -2,3 +2,11 @@ config FLASH_EEPROM
 	bool "Convert eeprom parent device to FLASH"
 	help
 	  Convert eeprom parent device to FLASH
+
+config FLASH_EEPROM_PSEUDO_ERASE
+	bool "Write FLASH_EEPROM_ERASE_SYMBOL when calling erase flash_driver_api"
+
+config FLASH_EEPROM_ERASE_SYMBOL
+	hex "Writeable character when erasing flash"
+	default 0xFF
+	depends on FLASH_EEPROM_PSEUDO_ERASE

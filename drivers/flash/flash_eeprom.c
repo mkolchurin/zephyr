@@ -10,7 +10,12 @@ LOG_MODULE_REGISTER(flash_eeprom, CONFIG_FLASH_LOG_LEVEL);
 
 static const struct flash_parameters emul_parameters = {
 	.write_block_size = 1,
-	.erase_value = 0xff,
+#ifdef CONFIG_FLASH_EEPROM_PSEUDO_ERASE
+	.erase_value = FLASH_EEPROM_ERASE_SYMBOL,
+#else	
+	.erase_value = 0,
+#endif
+	
 };
 
 static struct flash_pages_layout flash_layout = { .pages_count = 0, .pages_size = 0 };
@@ -49,13 +54,16 @@ static int emul_write(const struct device *dev, off_t offset, const void *data, 
 }
 static int emul_erase(const struct device *dev, off_t offset, size_t size)
 {
+	int ret = 0;
+#ifdef CONFIG_FLASH_EEPROM_PSEUDO_ERASE
 	const struct flash_eeprom_emul_config *config = dev->config;
 	const struct device *eeprom = config->eeprom;
-	int ret;
+	
 	while (size > 0) {
 		ret = eeprom_write(eeprom, offset, &emul_parameters.erase_value, 1);
 		size--;
 	}
+#endif
 	return ret;
 }
 
