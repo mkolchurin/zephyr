@@ -55,10 +55,11 @@ static int _smp_pipe_tx(struct zephyr_smp_transport *zst, struct net_buf *nb)
 
 	int ret = 0;
 	if (smp_pipe_tx != NULL) {
-		uint8_t data[nb->len];
-		uint32_t len = nb->len;
-		memcpy(data, nb->data, len);
-		ret = (*smp_pipe_tx)(data, len);
+		/* uint8_t data[nb->len];
+		uint32_t len = nb->len; */
+		// memcpy(data, nb->data, len);
+		// ret = (*smp_pipe_tx)(data, len);
+		ret = (*smp_pipe_tx)(nb->data, nb->len);
 	} else {
 		LOG_ERR("Pipe tx not implemented");
 		return MGMT_ERR_EUNKNOWN;
