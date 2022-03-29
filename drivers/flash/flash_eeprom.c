@@ -12,10 +12,10 @@ static const struct flash_parameters emul_parameters = {
 	.write_block_size = 1,
 #ifdef CONFIG_FLASH_EEPROM_PSEUDO_ERASE
 	.erase_value = FLASH_EEPROM_ERASE_SYMBOL,
-#else	
+#else
 	.erase_value = 0,
 #endif
-	
+
 };
 
 static struct flash_pages_layout flash_layout = { .pages_count = 0, .pages_size = 0 };
@@ -30,6 +30,7 @@ static int emul_init(const struct device *dev)
 {
 	const struct flash_eeprom_emul_config *config = dev->config;
 	const struct device *at24 = config->eeprom;
+
 	if (!device_is_ready(at24)) {
 		LOG_ERR("EEPROM EMUL '%s' is not ready\n", (at24)->name);
 		return -ENODEV;
@@ -42,6 +43,7 @@ static int emul_read(const struct device *dev, off_t offset, void *data, size_t 
 {
 	const struct flash_eeprom_emul_config *config = dev->config;
 	const struct device *eeprom = config->eeprom;
+
 	LOG_DBG("rd len '%d'  off '%d'", len, offset);
 	return eeprom_read(eeprom, offset, data, len);
 }
@@ -49,16 +51,18 @@ static int emul_write(const struct device *dev, off_t offset, const void *data, 
 {
 	const struct flash_eeprom_emul_config *config = dev->config;
 	const struct device *eeprom = config->eeprom;
+
 	LOG_HEXDUMP_DBG(data, len, "WR");
 	return eeprom_write(eeprom, offset, data, len);
 }
 static int emul_erase(const struct device *dev, off_t offset, size_t size)
 {
 	int ret = 0;
+
 #ifdef CONFIG_FLASH_EEPROM_PSEUDO_ERASE
 	const struct flash_eeprom_emul_config *config = dev->config;
 	const struct device *eeprom = config->eeprom;
-	
+
 	while (size > 0) {
 		ret = eeprom_write(eeprom, offset, &emul_parameters.erase_value, 1);
 		size--;
@@ -71,6 +75,7 @@ void emul_page_layout(const struct device *dev, const struct flash_pages_layout 
 		      size_t *layout_size)
 {
 	const struct flash_eeprom_emul_config *config = dev->config;
+
 	flash_layout.pages_count = config->page_count;
 	flash_layout.pages_size = config->page_size;
 
@@ -95,13 +100,13 @@ static const struct flash_driver_api emul_api = {
 
 #define EEPROM_DEVICE(n) DEVICE_DT_GET(DT_INST_PARENT(n))
 
-#define FLASH_EEPROM_DEF(n)                                                                        \
-	struct flash_eeprom_emul_config config_##n = {                                             \
-		.eeprom = EEPROM_DEVICE(n),                                                        \
-		.page_size = DT_INST_PROP(n, page_size),                                           \
-		.page_count = DT_INST_PROP(n, page_count),                                         \
-	};                                                                                         \
-	DEVICE_DT_INST_DEFINE(n, emul_init, NULL, NULL, &config_##n, POST_KERNEL,                  \
+#define FLASH_EEPROM_DEF(n)							  \
+	struct flash_eeprom_emul_config config_##n = {				  \
+		.eeprom = EEPROM_DEVICE(n),					  \
+		.page_size = DT_INST_PROP(n, page_size),			  \
+		.page_count = DT_INST_PROP(n, page_count),			  \
+	};									  \
+	DEVICE_DT_INST_DEFINE(n, emul_init, NULL, NULL, &config_##n, POST_KERNEL, \
 			      CONFIG_KERNEL_INIT_PRIORITY_DEVICE, &emul_api);
 
 DT_INST_FOREACH_STATUS_OKAY(FLASH_EEPROM_DEF)
