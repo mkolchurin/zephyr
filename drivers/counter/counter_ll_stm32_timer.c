@@ -598,13 +598,37 @@ void counter_stm32_irq_handler(const struct device *dev)
 										  \
 	static void counter_##idx##_stm32_irq_config(const struct device *dev)	  \
 	{									  \
-		IRQ_CONNECT(DT_IRQN(TIMER(idx)),				  \
-			    DT_IRQ(TIMER(idx), priority),			  \
-			    counter_stm32_irq_handler,				  \
-			    DEVICE_DT_INST_GET(idx),				  \
-			    0);							  \
-		irq_enable(DT_IRQN(TIMER(idx)));				  \
-	}									  \
+		IF_ENABLED(DT_IRQ_HAS_NAME(TIMER(idx), brk),				     \
+			   (IRQ_CONNECT(DT_IRQ_BY_NAME(TIMER(idx), brk, irq),		     \
+					DT_IRQ_BY_NAME(TIMER(idx), brk, priority),	     \
+					counter_stm32_irq_handler,			     \
+					DEVICE_DT_INST_GET(idx),			     \
+					0);))						     \
+		IF_ENABLED(DT_IRQ_HAS_NAME(TIMER(idx), up),				     \
+			   (IRQ_CONNECT(DT_IRQ_BY_NAME(TIMER(idx), up, irq),		     \
+					DT_IRQ_BY_NAME(TIMER(idx), up, priority),	     \
+					counter_stm32_irq_handler,			     \
+					DEVICE_DT_INST_GET(idx),			     \
+					0);))						     \
+		IF_ENABLED(DT_IRQ_HAS_NAME(TIMER(idx), trgcom),				     \
+			   (IRQ_CONNECT(DT_IRQ_BY_NAME(TIMER(idx), trgcom, irq),	     \
+					DT_IRQ_BY_NAME(TIMER(idx), trgcom, priority),	     \
+					counter_stm32_irq_handler,			     \
+					DEVICE_DT_INST_GET(idx),			     \
+					0);))						     \
+		IF_ENABLED(DT_IRQ_HAS_NAME(TIMER(idx), cc), (				     \
+				   IRQ_CONNECT(DT_IRQ_BY_NAME(TIMER(idx), cc, irq),	     \
+					       DT_IRQ_BY_NAME(TIMER(idx), cc, priority),     \
+					       counter_stm32_irq_handler,		     \
+					       DEVICE_DT_INST_GET(idx),			     \
+					       0);))					     \
+		IF_ENABLED(DT_IRQ_HAS_NAME(TIMER(idx), global), (			     \
+				   IRQ_CONNECT(DT_IRQ_BY_NAME(TIMER(idx), global, irq),	     \
+					       DT_IRQ_BY_NAME(TIMER(idx), global, priority), \
+					       counter_stm32_irq_handler,		     \
+					       DEVICE_DT_INST_GET(idx),			     \
+					       0);))					     \
+		irq_enable(DT_IRQN(TIMER(idx)));					     \
 										  \
 	static const struct counter_stm32_config counter##idx##_config = {	  \
 		.info = {							  \
