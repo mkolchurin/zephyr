@@ -240,6 +240,9 @@
 /drivers/crypto/*nrf_ecb*                 @maciekfabia @anangl
 /drivers/display/display_framebuf.c       @dcpleung
 /drivers/dac/                             @martinjaeger
+/drivers/dai/                             @juimonen
+/drivers/dai/intel/                       @juimonen
+/drivers/dai/intel/ssp/                   @juimonen
 /drivers/dma/*dw*                         @tbursztyka
 /drivers/dma/*sam0*                       @Sizurka
 /drivers/dma/dma_stm32*                   @cybertale @lowlander
@@ -331,9 +334,9 @@
 /drivers/pcie/                            @dcpleung @nashif @jhedberg
 /drivers/peci/                            @albertofloyd @franciscomunoz @sjvasanth1
 /drivers/pinctrl/                         @gmarull
+/drivers/pinctrl/*esp32*                  @glaubermaroto
 /drivers/pinmux/*hsdk*                    @iriszzw
 /drivers/pinmux/*it8xxx2*                 @ite
-/drivers/pinmux/*esp32*                   @glaubermaroto
 /drivers/pm_cpu_ops/                      @carlocaione
 /drivers/power_domain/                    @ceolin
 /drivers/ps2/                             @franciscomunoz @sjvasanth1

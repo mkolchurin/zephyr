@@ -431,6 +431,7 @@ class Handler:
         self.set_state("running", self.duration)
         self.generator = None
         self.generator_cmd = None
+        self.suite_name_check = True
 
         self.args = []
         self.terminated = False
@@ -527,8 +528,9 @@ class Handler:
     def _final_handle_actions(self, harness, handler_time):
         self._set_skip_reason(harness.state)
 
+        # only for Ztest tests:
         harness_class_name = type(harness).__name__
-        if harness_class_name == "Test":  # only for ZTest tests
+        if self.suite_name_check and harness_class_name == "Test":
             self._verify_ztest_suite_name(harness.state, harness.detected_suite_names, handler_time)
 
             if not harness.matched_run_id and harness.run_id_exists:
@@ -2275,6 +2277,8 @@ class CMake():
         self.generator = None
         self.generator_cmd = None
 
+        self.default_encoding = sys.getdefaultencoding()
+
     def parse_generated(self):
         self.defconfig = {}
         return {}
@@ -2308,8 +2312,8 @@ class CMake():
             results = {'msg': msg, "returncode": p.returncode, "instance": self.instance}
 
             if out:
-                log_msg = out.decode(sys.getdefaultencoding())
-                with open(os.path.join(self.build_dir, self.log), "a") as log:
+                log_msg = out.decode(self.default_encoding)
+                with open(os.path.join(self.build_dir, self.log), "a", encoding=self.default_encoding) as log:
                     log.write(log_msg)
 
             else:
@@ -2318,8 +2322,8 @@ class CMake():
             # A real error occurred, raise an exception
             log_msg = ""
             if out:
-                log_msg = out.decode(sys.getdefaultencoding())
-                with open(os.path.join(self.build_dir, self.log), "a") as log:
+                log_msg = out.decode(self.default_encoding)
+                with open(os.path.join(self.build_dir, self.log), "a", encoding=self.default_encoding) as log:
                     log.write(log_msg)
 
             if log_msg:
@@ -2399,8 +2403,8 @@ class CMake():
             results = {"returncode": p.returncode}
 
         if out:
-            with open(os.path.join(self.build_dir, self.log), "a") as log:
-                log_msg = out.decode(sys.getdefaultencoding())
+            with open(os.path.join(self.build_dir, self.log), "a", encoding=self.default_encoding) as log:
+                log_msg = out.decode(self.default_encoding)
                 log.write(log_msg)
 
         return results
@@ -2543,6 +2547,7 @@ class ProjectBuilder(FilterBuilder):
         self.verbose = kwargs.get('verbose', None)
         self.warnings_as_errors = kwargs.get('warnings_as_errors', True)
         self.overflow_as_errors = kwargs.get('overflow_as_errors', False)
+        self.suite_name_check = kwargs.get('suite_name_check', True)
 
     @staticmethod
     def log_info(filename, inline_logs):
@@ -2634,6 +2639,7 @@ class ProjectBuilder(FilterBuilder):
             instance.handler.args = args
             instance.handler.generator_cmd = self.generator_cmd
             instance.handler.generator = self.generator
+            instance.handler.suite_name_check = self.suite_name_check
 
     def process(self, pipeline, done, message, lock, results):
         op = message.get('op')
@@ -2954,6 +2960,7 @@ class TestSuite(DisablePyTestCollectionMixin):
                        "slow": {"type": "bool", "default": False},
                        "timeout": {"type": "int", "default": 60},
                        "min_ram": {"type": "int", "default": 8},
+                       "modules": {"type": "list", "default": []},
                        "depends_on": {"type": "set"},
                        "min_flash": {"type": "int", "default": 32},
                        "arch_allow": {"type": "set"},
@@ -3007,6 +3014,7 @@ class TestSuite(DisablePyTestCollectionMixin):
         self.overflow_as_errors = False
         self.quarantine_verify = False
         self.retry_build_errors = False
+        self.suite_name_check = True
 
         # Keep track of which test cases we've filtered out and why
         self.testcases = {}
@@ -3037,6 +3045,8 @@ class TestSuite(DisablePyTestCollectionMixin):
 
         self.pipeline = None
         self.version = "NA"
+
+        self.modules = []
 
     def check_zephyr_version(self):
         try:
@@ -3331,6 +3341,7 @@ class TestSuite(DisablePyTestCollectionMixin):
                         tc.build_on_all = tc_dict["build_on_all"]
                         tc.slow = tc_dict["slow"]
                         tc.min_ram = tc_dict["min_ram"]
+                        tc.modules = tc_dict["modules"]
                         tc.depends_on = tc_dict["depends_on"]
                         tc.min_flash = tc_dict["min_flash"]
                         tc.extra_sections = tc_dict["extra_sections"]
@@ -3528,6 +3539,10 @@ class TestSuite(DisablePyTestCollectionMixin):
                     # Discard silently
                     continue
 
+                if tc.modules and self.modules:
+                    if not set(tc.modules).issubset(set(self.modules)):
+                        discards[instance] = discards.get(instance, f"one or more required module not available: {','.join(tc.modules)}")
+
                 if runnable and not instance.run:
                     discards[instance] = discards.get(instance, "Not runnable on device")
 
@@ -3719,7 +3734,8 @@ class TestSuite(DisablePyTestCollectionMixin):
                                     generator_cmd=self.generator_cmd,
                                     verbose=self.verbose,
                                     warnings_as_errors=self.warnings_as_errors,
-                                    overflow_as_errors=self.overflow_as_errors
+                                    overflow_as_errors=self.overflow_as_errors,
+                                    suite_name_check=self.suite_name_check
                                     )
                 pb.process(pipeline, done_queue, task, lock, results)
 
