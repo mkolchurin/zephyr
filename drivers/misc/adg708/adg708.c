@@ -23,9 +23,9 @@ struct adg708_config {
 int adg708_select_channel(const struct device *dev, uint32_t channel)
 {
 	struct adg708_config *config = (struct adg708_config *)dev->config;
-	gpio_pin_set_dt(&config->gpios.nEN, channel & 1);
-	gpio_pin_set_dt(&config->gpios.nEN, (channel & 2) >> 1);
-	gpio_pin_set_dt(&config->gpios.nEN, (channel & 4) >> 2);
+	gpio_pin_set_dt(&config->gpios.a0, channel & 1);
+	gpio_pin_set_dt(&config->gpios.a1, (channel & 2) >> 1);
+	gpio_pin_set_dt(&config->gpios.a2, (channel & 4) >> 2);
 	gpio_pin_set_dt(&config->gpios.nEN, 0);
 	LOG_DBG("set %d ch", channel);
 	return 0;
