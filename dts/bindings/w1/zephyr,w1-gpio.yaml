@@ -1,0 +1,18 @@
+description: W1 over gpio
+
+compatible: "zephyr,w1-gpio"
+
+include: [base.yaml, w1-controller.yaml]
+
+
+properties:
+    ctrl-gpios:
+      type: phandle-array
+      required: true
+    # counter:
+    #   type: phandle
+    #   required: false
+    # counter-channel:
+    #   type: int
+    #   default: 0
+    #   required: false
