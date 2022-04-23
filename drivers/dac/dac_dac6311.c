@@ -35,19 +35,21 @@ static int dac6311_reg_write(const struct device *dev, uint16_t data, enum DAC63
 {
 	const struct dac6311_config *config = dev->config;
 
-	uint16_t tx_message = sys_cpu_to_be16(data & 0xFFF) << 2;
+	uint16_t tx_message = data << 4;
+
+	WRITE_BIT(tx_message, 14, (((uint8_t)op & 0b10) >> 1));
+	WRITE_BIT(tx_message, 15, (uint8_t)op & 0b01);
+
+	tx_message = sys_cpu_to_be16(tx_message);
+	LOG_DBG("tx %d, op = '%d', data = '%d'", tx_message, op, data);
+	LOG_HEXDUMP_DBG((uint8_t *)&tx_message, 2, "adc_write");
+
 
 	const struct spi_buf buf[1] = { { .buf = &tx_message, .len = sizeof(tx_message) } };
 	struct spi_buf_set tx = {
 		.buffers = buf,
 		.count = ARRAY_SIZE(buf),
 	};
-
-	WRITE_BIT(tx_message, 0, (((uint8_t)op & 0b10) >> 1));
-	WRITE_BIT(tx_message, 1, (uint8_t)op & 0b01);
-
-	LOG_DBG("tx %d, op = '%d', data = '%d'", tx_message, op, data);
-	LOG_HEXDUMP_DBG((uint8_t *)tx_message, 2, "adc_write");
 
 	if (k_is_in_isr()) {
 		/* Prevent SPI transactions from an ISR */
@@ -78,10 +80,11 @@ static int dac6311_write_value(const struct device *dev, uint8_t channel, uint32
 		return -EINVAL;
 	}
 
-	if (value != 0)
+	if (value != 0) {
 		ret = dac6311_reg_write(dev, value, DAC6311_NORMAL_MODE);
-	else
+	} else {
 		ret = dac6311_reg_write(dev, value, DAC6311_TO1KOHM_MODE);
+	}
 	if (ret) {
 		return -EIO;
 	}
@@ -133,17 +136,17 @@ static const struct dac_driver_api dac6311_driver_api = {
 	.write_value = dac6311_write_value,
 };
 
-#define DAC_DAC6311_INIT(num)                                                                      \
-	static struct dac6311_data dac6311_data_##num;                                             \
-	static const struct dac6311_config dac6311_config_##num = {                                \
-		.bus = SPI_DT_SPEC_INST_GET(num,                                                   \
-					    SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB |                \
-						    SPI_WORD_SET(8) | SPI_MODE_CPHA,               \
-					    0),                                                    \
-		.resolution = 10,                                                                  \
-	};                                                                                         \
-	DEVICE_DT_INST_DEFINE(num, &dac6311_init, NULL, &dac6311_data_##num,                       \
-			      &dac6311_config_##num, POST_KERNEL, CONFIG_DAC_INIT_PRIORITY,        \
+#define DAC_DAC6311_INIT(num)								    \
+	static struct dac6311_data dac6311_data_##num;					    \
+	static const struct dac6311_config dac6311_config_##num = {			    \
+		.bus = SPI_DT_SPEC_INST_GET(num,					    \
+					    SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB |	    \
+					    SPI_WORD_SET(8) | SPI_MODE_CPHA,		    \
+					    0),						    \
+		.resolution = 10,							    \
+	};										    \
+	DEVICE_DT_INST_DEFINE(num, &dac6311_init, NULL, &dac6311_data_##num,		    \
+			      &dac6311_config_##num, POST_KERNEL, CONFIG_DAC_INIT_PRIORITY, \
 			      &dac6311_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(DAC_DAC6311_INIT);
