@@ -36,7 +36,7 @@ static void modbus_serial_tx_on(struct modbus_context *ctx)
 	if (cfg->de != NULL) {
 		gpio_pin_set(cfg->de->port, cfg->de->pin, 1);
 	}
-
+	uart_direction(cfg->dev, (uint8_t)UART_CFG_TX_DIRECTION);
 	uart_irq_tx_enable(cfg->dev);
 }
 
@@ -57,7 +57,7 @@ static void modbus_serial_rx_on(struct modbus_context *ctx)
 	if (cfg->re != NULL) {
 		gpio_pin_set(cfg->re->port, cfg->re->pin, 1);
 	}
-
+	uart_direction(cfg->dev, (uint8_t)UART_CFG_RX_DIRECTION);
 	uart_irq_rx_enable(cfg->dev);
 }
 
@@ -594,5 +594,6 @@ void modbus_serial_disable(struct modbus_context *ctx)
 {
 	modbus_serial_tx_off(ctx);
 	modbus_serial_rx_off(ctx);
+	uart_direction(ctx->cfg->dev, (uint8_t)UART_CFG_RX_TX_DIRECTION);
 	k_timer_stop(&ctx->cfg->rtu_timer);
 }

@@ -1502,10 +1502,35 @@ static int uart_stm32_async_init(const struct device *dev)
 
 #endif /* CONFIG_UART_ASYNC_API */
 
+#ifdef CONFIG_UART_DIRECTION_CONTROL
+static int uart_stm32_direction(const struct device *dev, enum uart_config_direction dir)
+{
+	const struct uart_stm32_config *config = dev->config;
+
+	switch (dir) {
+	case UART_CFG_RX_DIRECTION:
+		LL_USART_SetTransferDirection(config->usart, LL_USART_DIRECTION_RX);
+		break;
+	case UART_CFG_TX_DIRECTION:
+		LL_USART_SetTransferDirection(config->usart, LL_USART_DIRECTION_TX);
+		break;
+	case UART_CFG_RX_TX_DIRECTION:
+		LL_USART_SetTransferDirection(config->usart, LL_USART_DIRECTION_TX_RX);
+		break;
+	default:
+		return -EINVAL;
+	}
+	return 0;
+}
+#endif /* CONFIG_UART_DIRECTION_CONTROL */
+
 static const struct uart_driver_api uart_stm32_driver_api = {
 	.poll_in = uart_stm32_poll_in,
 	.poll_out = uart_stm32_poll_out,
 	.err_check = uart_stm32_err_check,
+#ifdef CONFIG_UART_DIRECTION_CONTROL
+	.direction = uart_stm32_direction,
+#endif /* CONFIG_UART_DIRECTION_CONTROL */
 #ifdef CONFIG_UART_USE_RUNTIME_CONFIGURE
 	.configure = uart_stm32_configure,
 	.config_get = uart_stm32_config_get,
