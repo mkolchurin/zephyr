@@ -5,19 +5,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(wifi_esp_at_offload, CONFIG_WIFI_LOG_LEVEL);
 
-#include <zephyr.h>
-#include <kernel.h>
-#include <device.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 
-#include <net/net_pkt.h>
-#include <net/net_if.h>
-#include <net/net_offload.h>
+#include <zephyr/net/net_pkt.h>
+#include <zephyr/net/net_if.h>
+#include <zephyr/net/net_offload.h>
 
 #include "esp.h"
 
@@ -536,8 +536,8 @@ static int esp_recv(struct net_context *context,
 	struct esp_socket *sock = context->offload_context;
 	int ret;
 
-	LOG_DBG("link_id %d, timeout %d, cb 0x%x, data 0x%x", sock->link_id,
-		timeout, (int)cb, (int)user_data);
+	LOG_DBG("link_id %d, timeout %d, cb %p, data %p",
+		sock->link_id, timeout, cb, user_data);
 
 	k_mutex_lock(&sock->lock, K_FOREVER);
 	sock->recv_cb = cb;

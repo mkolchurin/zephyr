@@ -19,9 +19,22 @@ API Changes
 Changes in this release
 =======================
 
+* All Zephyr public headers have been moved to ``include/zephyr``, meaning they
+  need to be prefixed with ``<zephyr/...>`` when included. Because this change
+  can potentially break many applications or libraries,
+  :kconfig:option:`CONFIG_LEGACY_INCLUDE_PATH` is provided to allow using the
+  old include path. This option is now enabled by default to allow a smooth
+  transition. In order to facilitate the migration to the new include prefix, a
+  script to automate the process is also provided:
+  :zephyr_file:`scripts/utils/migrate_includes.py`.
+
 * LoRaWAN: The message type parameter in :c:func:`lorawan_send` was changed
   from ``uint8_t`` to ``enum lorawan_message_type``. If ``0`` was passed for
   unconfirmed message, this has to be changed to ``LORAWAN_MSG_UNCONFIRMED``.
+
+* Disk Subsystem: SPI mode SD cards now use the SD subsystem to communicate
+  with SD cards. See :ref:`the disk access api <disk_access_api>` for an
+  example of the new devicetree binding format required.
 
 Removed APIs in this release
 ============================
@@ -48,6 +61,15 @@ Deprecated in this release
   * Deprecated the `gpio_dev`, `gpio_pin` and `gpio_dt_flags` members from
     spi_cs_control struct in favor of `gpio_dt_spec` gpio.
 
+* PWM
+
+  * The ``pin`` prefix has been removed from all PWM API calls. So for example,
+    ``pwm_pin_set_cycles`` is now ``pwm_set_cycles``. The old API calls are
+    still provided but marked as deprecated.
+  * The PWM period is now always set in nanoseconds, so the ``_nsec`` and
+    ``_usec`` set functions have been deprecated. Other units can be specified
+    using, e.g. ``PWM_USEC()`` macros, which convert down to nanoseconds.
+
 Stable API changes in this release
 ==================================
 
@@ -73,6 +95,16 @@ New APIs in this release
 
   * Added :c:macro:`IN_RANGE` for checking if a value is in the range of two
     other values.
+
+* SDHC API
+
+  * Added the :ref:`SDHC api <sdhc_api>`, used to interact with SD host controllers.
+
+* MIPI-DSI
+
+  * Added a :ref:`MIPI-DSI api <mipi_dsi_api>`. This is an experimental API,
+    some of the features/APIs will be implemented later.
+
 
 Kernel
 ******
@@ -168,6 +200,11 @@ Drivers and Sensors
 
 * PWM
 
+  * Added :c:struct:`pwm_dt_spec` and associated helpers, e.g.
+    :c:macro:`PWM_DT_SPEC_GET` or :c:func:`pwm_set_dt`. This addition makes it
+    easier to use the PWM API when the PWM channel, period and flags are taken
+    from a Devicetree PWM cell.
+
 * Sensor
 
 * Serial
@@ -215,6 +252,21 @@ Libraries / Subsystems
 
   * Added mcumgr os hook to allow an application to accept or decline a reset
     request; :kconfig:option:`CONFIG_OS_MGMT_RESET_HOOK` enables the callback.
+  * Added mcumgr fs hook to allow an application to accept or decline a file
+    read/write request; :kconfig:option:`CONFIG_FS_MGMT_FILE_ACCESS_HOOK`
+    enables the feature which then needs to be registered by the application.
+  * Added supplied image header to mcumgr img upload callback parameter list
+    which allows the application to inspect it to determine if it should be
+    allowed or declined.
+  * Made the img mgmt ``img_mgmt_vercmp`` function public to allow application-
+    level comparison of image versions.
+
+* SD Subsystem
+
+  * Added the SD subsystem, which is used by the
+    :ref:`disk access api <disk_access_api>` to interact with connected SD cards.
+    This subsystem uses the :ref:`SDHC api <sdhc_api>` to interact with the SD
+    host controller the SD device is connected to.
 
 HALs
 ****

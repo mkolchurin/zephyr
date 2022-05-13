@@ -6,16 +6,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <drivers/gpio.h>
+#include <zephyr/drivers/gpio.h>
 #include <soc.h>
-#include <sys/printk.h>
+#include <zephyr/sys/printk.h>
 #include <ctype.h>
-#include <drivers/gpio.h>
-#include <drivers/pwm.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/pwm.h>
 
-#include <display/mb_display.h>
+#include <zephyr/display/mb_display.h>
 
-#include <bluetooth/mesh.h>
+#include <zephyr/bluetooth/mesh.h>
 
 #include "board.h"
 
@@ -129,14 +129,14 @@ void board_play_tune(const char *str)
 		}
 
 		if (period) {
-			pwm_pin_set_usec(pwm, BUZZER_PWM_CHANNEL,
-					 period, period / 2U, 0);
+			pwm_set(pwm, BUZZER_PWM_CHANNEL, PWM_USEC(period),
+				PWM_USEC(period) / 2U, 0);
 		}
 
 		k_sleep(K_MSEC(duration));
 
 		/* Disable the PWM */
-		pwm_pin_set_usec(pwm, BUZZER_PWM_CHANNEL, 0, 0, 0);
+		pwm_set(pwm, BUZZER_PWM_CHANNEL, 0, 0, 0);
 	}
 }
 

@@ -335,7 +335,6 @@ struct ll_conn {
 		uint8_t  cis_id;
 		uint32_t c_max_sdu:12;
 		uint32_t p_max_sdu:12;
-		uint32_t framed:1;
 		uint32_t cis_offset_min;
 		uint32_t cis_offset_max;
 		uint16_t conn_event_count;
@@ -358,6 +357,8 @@ struct llcp_struct {
 	struct {
 		sys_slist_t pend_proc_list;
 		uint8_t state;
+		/* Procedure Response Timeout timer expire value */
+		uint16_t prt_expire;
 		uint8_t pause;
 	} local;
 
@@ -365,6 +366,8 @@ struct llcp_struct {
 	struct {
 		sys_slist_t pend_proc_list;
 		uint8_t state;
+		/* Procedure Response Timeout timer expire value */
+		uint16_t prt_expire;
 		uint8_t pause;
 		uint8_t collision;
 		uint8_t incompat;
@@ -373,6 +376,9 @@ struct llcp_struct {
 		uint8_t paused_cmd;
 #endif /* CONFIG_BT_CTLR_DF_CONN_CTE_RSP || CONFIG_BT_CTLR_DF_CONN_CTE_REQ */
 	} remote;
+
+	/* Procedure Response Timeout timer reload value */
+	uint16_t prt_reload;
 
 	/* Prepare parameters */
 	struct {
@@ -526,8 +532,7 @@ struct ll_conn {
 	uint16_t connect_expire;
 	uint16_t supervision_reload;
 	uint16_t supervision_expire;
-	uint16_t procedure_reload;
-	uint16_t procedure_expire;
+
 
 #if defined(CONFIG_BT_CTLR_PHY)
 	uint8_t phy_pref_tx:3;

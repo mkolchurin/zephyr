@@ -9,23 +9,23 @@
 
 #define DT_DRV_COMPAT st_stm32_rng
 
-#include <kernel.h>
-#include <device.h>
-#include <drivers/entropy.h>
-#include <random/rand32.h>
-#include <init.h>
-#include <sys/__assert.h>
-#include <sys/util.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/entropy.h>
+#include <zephyr/random/rand32.h>
+#include <zephyr/init.h>
+#include <zephyr/sys/__assert.h>
+#include <zephyr/sys/util.h>
 #include <errno.h>
 #include <soc.h>
-#include <pm/policy.h>
+#include <zephyr/pm/policy.h>
 #include <stm32_ll_bus.h>
 #include <stm32_ll_rcc.h>
 #include <stm32_ll_rng.h>
 #include <stm32_ll_system.h>
-#include <sys/printk.h>
-#include <drivers/clock_control.h>
-#include <drivers/clock_control/stm32_clock_control.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/drivers/clock_control.h>
+#include <zephyr/drivers/clock_control/stm32_clock_control.h>
 #include "stm32_hsem.h"
 
 #define IRQN		DT_INST_IRQN(0)
@@ -246,7 +246,7 @@ static uint16_t rng_pool_get(struct rng_pool *rngp, uint8_t *buf, uint16_t len)
 	available = available - len;
 	if ((available <= rngp->threshold)
 		&& !LL_RNG_IsEnabledIT(entropy_stm32_rng_data.rng)) {
-		pm_policy_state_lock_get(PM_STATE_SUSPEND_TO_IDLE);
+		pm_policy_state_lock_get(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
 		LL_RNG_EnableIT(entropy_stm32_rng_data.rng);
 	}
 
@@ -300,7 +300,7 @@ static void stm32_rng_isr(const void *arg)
 				byte);
 		if (ret < 0) {
 			LL_RNG_DisableIT(entropy_stm32_rng_data.rng);
-			pm_policy_state_lock_put(PM_STATE_SUSPEND_TO_IDLE);
+			pm_policy_state_lock_put(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
 		}
 
 		k_sem_give(&entropy_stm32_rng_data.sem_sync);
@@ -512,7 +512,7 @@ static int entropy_stm32_rng_init(const struct device *dev)
 	 * rng pool is being populated. The ISR will release the constraint again
 	 * when the rng pool is filled.
 	 */
-	pm_policy_state_lock_get(PM_STATE_SUSPEND_TO_IDLE);
+	pm_policy_state_lock_get(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
 
 	LL_RNG_EnableIT(dev_data->rng);
 

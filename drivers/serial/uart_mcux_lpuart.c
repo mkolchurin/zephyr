@@ -10,19 +10,19 @@
 #include <errno.h>
 #include <soc.h>
 #include <fsl_lpuart.h>
-#include <device.h>
-#include <drivers/uart.h>
-#include <drivers/clock_control.h>
-#include <pm/policy.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/uart.h>
+#include <zephyr/drivers/clock_control.h>
+#include <zephyr/pm/policy.h>
 #ifdef CONFIG_PINCTRL
-#include <drivers/pinctrl.h>
+#include <zephyr/drivers/pinctrl.h>
 #endif
 #ifdef CONFIG_UART_ASYNC_API
-#include <drivers/dma.h>
+#include <zephyr/drivers/dma.h>
 #endif
 
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(uart_mcux_lpuart, LOG_LEVEL_ERR);
 
 #ifdef CONFIG_UART_ASYNC_API
@@ -105,7 +105,7 @@ static void mcux_lpuart_pm_policy_state_lock_get(const struct device *dev)
 
 	if (!data->pm_state_lock_on) {
 		data->pm_state_lock_on = true;
-		pm_policy_state_lock_get(PM_STATE_SUSPEND_TO_IDLE);
+		pm_policy_state_lock_get(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
 	}
 }
 
@@ -115,7 +115,7 @@ static void mcux_lpuart_pm_policy_state_lock_put(const struct device *dev)
 
 	if (data->pm_state_lock_on) {
 		data->pm_state_lock_on = false;
-		pm_policy_state_lock_put(PM_STATE_SUSPEND_TO_IDLE);
+		pm_policy_state_lock_put(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
 	}
 }
 #endif /* CONFIG_PM */
